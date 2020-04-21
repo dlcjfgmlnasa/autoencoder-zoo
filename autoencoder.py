@@ -12,9 +12,10 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dataset_path', type=str, default=os.path.join('.', 'dataset'))
-    parser.add_argument('--model_path', type=str, default=os.path.join('.', 'save_model'))
-    parser.add_argument('--figure_path', type=str, default=os.path.join('.', 'fig'))
+    parser.add_argument('--data_dir', type=str, default=os.path.join('.', 'dataset'))
+    parser.add_argument('--log_dir', type=str, default=os.path.join('.', 'logs', 'autoencoder'))
+    parser.add_argument('--ckpt_dir', type=str, default=os.path.join('.', 'ckpt'))
+    parser.add_argument('--figure_dir', type=str, default=os.path.join('.', 'fig'))
     parser.add_argument('--epochs', type=int, default=20)
     parser.add_argument('--batch_size', type=int, default=100)
     parser.add_argument('--learning_rate', type=float, default=1e-3)
@@ -23,6 +24,7 @@ def get_args():
     parser.add_argument('--latent_dim', type=int, default=50)
     parser.add_argument('--writer_point_step', type=int, default=100)
     parser.add_argument('--save_point_step', type=int, default=1000)
+    parser.add_argument('--mode', type=str, default='latent_visualization', choices=['train', 'latent_visualization'])
     return parser.parse_args()
 
 
@@ -52,16 +54,16 @@ class AutoEncoder(nn.Module):
 
 
 def train(arguments):
-    model_path = os.path.join(arguments.model_path, 'autoencoder')
-    if not os.path.exists(model_path):
-        os.makedirs(model_path)
+    ckpt_dir = os.path.join(arguments.ckpt_path, 'autoencoder')
+    if not os.path.exists(ckpt_dir):
+        os.makedirs(ckpt_dir)
 
     train_dataloader = mnist_train_dataloader(
-        path=arguments.dataset_path,
+        data_dir=arguments.data_dir,
         batch_size=arguments.batch_size
     )
     writer = SummaryWriter(
-        logdir='./logs/autoencoder',
+        logdir=arguments.log_dir,
     )
 
     model = AutoEncoder(
@@ -77,15 +79,6 @@ def train(arguments):
     count = 0
     total_it = 0
     step_total_loss = 0
-
-    writer.add_hparams({
-        'epochs': arguments.epochs,
-        'batch_size': arguments.batch_size,
-        'learning_rate': arguments.learning_rate,
-        'encoder_dims': arguments.encoder_dims,
-        'decoder_dims': arguments.decoder_dims,
-        'latent_dim': arguments.latent_dim
-    })
 
     for epoch in range(arguments.epochs):
         for it, data in enumerate(train_dataloader):
@@ -129,22 +122,21 @@ def train(arguments):
                     'decoder_optimizer_state_dict': encoder_optimizer.state_dict(),
                     'loss': step_total_loss,
                     'model': model
-                }, os.path.join(model_path, 'step_{0:05d}_epoch_{1:03d}_batch_size_{2:03d}_lr_{3:.03f}.pth'.format(
+                }, os.path.join(ckpt_dir, 'step_{0:05d}_epoch_{1:03d}_batch_size_{2:03d}_lr_{3:.03f}.pth'.format(
                     total_it, epoch, arguments.batch_size, arguments.learning_rate)))
 
 
 if __name__ == '__main__':
     args = get_args()
 
-    # train(args)
-    latent_visualization(
-        title='autoencoder',
-        dataloader_path=os.path.join('.', 'dataset'),
-        model_path=os.path.join('.', 'save_model', 'autoencoder',
-                                'step_12000_epoch_019_batch_size_100_lr_0.001.pth'),
-        figure_path=args.figure_path
-    )
-
-
+    if args.mode == 'train':
+        train(args)
+    elif args.mode == 'latent_visualization':
+        latent_visualization(
+            title='autoencoder',
+            data_dir=args.data_dir,
+            ckpt_dir=os.path.join(args.ckpt_dir, 'step_12000_epoch_019_batch_size_100_lr_0.001.pth'),
+            figure_dir=args.figure_dir
+        )
 
 

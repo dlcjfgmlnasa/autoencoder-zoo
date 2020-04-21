@@ -9,10 +9,10 @@ from sklearn.manifold import TSNE
 from matplotlib import pyplot as plt
 
 
-def mnist_train_dataloader(path, batch_size=32):
+def mnist_train_dataloader(data_dir='./dataset', batch_size=32):
     # MNIST train dataset & dataloader
     dataset = torchvision.datasets.MNIST(
-        path,
+        root=data_dir,
         train=True,
         transform=transforms.Compose([
             transforms.ToTensor(),
@@ -24,10 +24,10 @@ def mnist_train_dataloader(path, batch_size=32):
     return data_loader
 
 
-def mnist_test_dataloader(path='./dataset'):
+def mnist_test_dataloader(data_dir='./dataset'):
     # MNIST test dataset & dataloader
     dataset = torchvision.datasets.MNIST(
-        path,
+        root=data_dir,
         train=False,
         transform=transforms.Compose([
             transforms.ToTensor(),
@@ -39,13 +39,13 @@ def mnist_test_dataloader(path='./dataset'):
     return data_loader
 
 
-def latent_visualization(title, model_path, dataloader_path, figure_path):
-    filepath = os.path.join(figure_path, title+'.png')
+def latent_visualization(title, ckpt_dir, data_dir, figure_dir):
+    figure_path = os.path.join(figure_dir, title+'.png')
     dataloader = mnist_test_dataloader(
-        path=dataloader_path
+        data_dir=data_dir
     )
     # model load : 학습된 모델 불러오기
-    checkpoint = torch.load(model_path)
+    checkpoint = torch.load(ckpt_dir)
     model = checkpoint['model']
     model.load_state_dict(checkpoint['model_state_dict'])
     model.eval()
@@ -71,13 +71,13 @@ def latent_visualization(title, model_path, dataloader_path, figure_path):
     t_sne_results_df = pd.DataFrame(data=t_sne_results, columns=['x', 'y'])
     t_sne_results_df['label'] = labels
 
-    # visualization : 시각화
+    # visualization : 2차원 시각화
     plt.title(title)
     plt.scatter(x=t_sne_results_df['x'], y=t_sne_results_df['y'], c=t_sne_results_df['label'],
                 cmap=plt.cm.get_cmap('jet', 10),
                 s=2, alpha=0.7)
     plt.colorbar(ticks=range(10))
-    plt.savefig(filepath)
+    plt.savefig(figure_path)
     plt.show()
 
 

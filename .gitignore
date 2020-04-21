@@ -1,2 +1,3 @@
 ./venv
 ./dataset
+./model/__pycache__/
