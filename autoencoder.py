@@ -15,7 +15,7 @@ def get_args():
     parser.add_argument('--data_dir', type=str, default=os.path.join('.', 'dataset'))
     parser.add_argument('--log_dir', type=str, default=os.path.join('.', 'logs', 'autoencoder'))
     parser.add_argument('--ckpt_dir', type=str, default=os.path.join('.', 'ckpt'))
-    parser.add_argument('--figure_dir', type=str, default=os.path.join('.', 'fig'))
+    parser.add_argument('--figure_dir', type=str, default=os.path.join('.', 'figure'))
     parser.add_argument('--epochs', type=int, default=20)
     parser.add_argument('--batch_size', type=int, default=100)
     parser.add_argument('--learning_rate', type=float, default=1e-3)
